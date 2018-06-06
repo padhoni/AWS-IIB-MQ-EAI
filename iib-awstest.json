@@ -1,0 +1,22 @@
+{
+  "provisioners": [{
+    "type": "shell",
+    "script": "iib-install.sh",
+    "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E {{ .Path }}",
+    "environment_vars": [
+      "IIB_VERSION=iib-10.0.0.10",
+      "IIB_URL=http://public.dhe.ibm.com/ibmdl/export/pub/software/websphere/integration/10.0.0.10-IIB-LINUX64-DEVELOPER.tar.gz"
+    ]
+  }],
+  "builders": [{
+     "type": "amazon-ebs",
+    "access_key": "AKIAJNEVBF5VFKXXXXXX",
+    "secret_key": "J9GEImiKkkxiUhaPS6CmB1tmnNZYi0XXXXXXXXXX",
+    "ami_name": "ibm-iib-mq-",
+    "instance_type": "t1.micro",
+    "region": "us-west-2",
+    "source_ami": "ami-d379eabv",
+    "ssh_username": "ubuntu",
+    "ami_description": "IBM MQ V9.0, IBM Integration Bus V10.0.0.10 on Ubuntu 14.04"
+  }]
+}
