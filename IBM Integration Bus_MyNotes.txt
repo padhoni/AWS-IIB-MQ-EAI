@@ -1,0 +1,153 @@
+########### Useful IIB/ Broker Commands  ###########
+# List Instances
+mqsilist
+# Start IIB/ Broker instances
+mqsistart <Integration node/ Broker Name>
+Stop IIB/ Broker instances
+mqsistop <Integration node/ Broker Name>
+# Start/Stop IIB/ Broker Flow
+mqsistopmsgflow <Integration node/ Broker Name> -e <Integration Server/ exec name> -m <message_flow>
+mqsistartmsgflow <Integration node/ Broker Name> -e <Integration Server/ exec name> -m <message_flow>
+####################################################
+
+
+############## User and Service trace  #############
+# u= user t=service
+mqsichangetrace <Integration node/ Broker Name> -<u/t> -e <Integration Server/ exec name> -l debug -r -c 1000000
+mqsichangetrace <Integration node/ Broker Name> -<u/t> -e <Integration Server/ exec name> -l none
+mqsireadlog <Integration node/ Broker Name> -<u/t> -e <Integration Server/ exec name> -f -o <File name e.g flowtrace>.xml
+mqsiformatlog -i <File name e.g flowtrace> -o <text file name e.g flowtrace.txt>
+####################################################
+
+
+####### HTTP Port at exec/IS and Broker Level #######
+
+mqsichangeproperties <Integration node/ Broker Name> -e <EXEC / IS Name> -o HTTPConnector -n explicitlySetPortNumber -v <port number>
+# Confirm changed status at EG property level
+mqsireportproperties <Integration node/ Broker Name> -e <EXEC / IS Name> -o HTTPConnector -a
+mqsireportproperties <Integration node/ Broker Name> -e <EXEC / IS Name> -o ComIbmSocketConnectionManager -a
+
+#Broker Level HTTP(S) Listeners
+mqsichangeproperties <Integration node/ Broker Name> -b httplistener -o HTTPConnector -n port -v <Port no e.g 7****>
+####################################################
+
+################# LDAP connection  #################
+
+@ Broker:
+Step 1:
+Instruct broker to use queue based permissions
+
+mqsistop IIB10BRK
+mqsichangeauthmode IIB10BRK -s active -m mq
+mqsistart IIB10BRK
+
+Step 2:
+
+mqsichangeproperties IIB10BRK -b webadmin -o server -n enableSSL -v true
+
+SSL:
+mqsichangeproperties IIB10BRK -b webadmin -o server -n ldapAuthenticationUri -v \"ldaps://<LDAP Server Name>:636/OU=<abc>,DC=americas,DC=corpdir,DC=net?sAMAccountName?sub\"
+
+Non-SSL:
+mqsichangeproperties IIB10BRK -b webadmin -o server -n ldapAuthenticationUri -v \"ldap://<LDAP Server Name>:389/OU=<abc>,DC=americas,DC=corpdir,DC=net?sAMAccountName?sub\"
+
+Step 3: LDAP Binding
+mqsisetdbparms IIB10BRK -n ldap::<LDAP Server Name> -u <group name> -p <password>
+
+or
+
+mqsisetdbparms IIB10BRK -n ldap::<LDAP Server Name> -u <group name>,ou=UsersAdministrative,ou=<xyz>,ou=<abc>,dc=americas,DC=corpdir,DC=net -p <password>
+
+Step 4: If required add LDAP certificate at Broker key store
+runmqckm -cert -add -label CorpRootCA -file Corp-Root-CA-G2.cer -format ascii -db wmbkeystore_IIB10BRK.jks -trust enable -pw <password>
+
+Step 5: Authenticate Users
+mqsiwebuseradmin IIB10BRK -c -u "*" -x -r <service acc e.g wmb...>
+
+or (Individual)
+mqsiwebuseradmin IIB10BRK -c -u "user name" -x -r <service acc e.g wmb...>
+
+
+Step 6: Bounce Broker
+mqsistop IIB10BRK
+mqsichangebroker IIB10BRK -s active
+mqsistart IIB10BRK
+####################################################
+
+
+################# DB Related  ######################
+
+# Catalog DB
+catalog tcpip node <DB Node Name> remote <Server Name> server <Port> WITH “ABC Database”
+# Delete
+uncatalog database <DB Node Name>
+list node directory
+catalog database <DB Name> as <e.g Mainframe or wbi or any other serevr> at node <DB Node Name> authentication server
+list db directory
+connect to <DB Name> user <User Name> using <Password>
+# Test DB conn
+mqsicvp <Integration node/ Broker Name>
+# FTP credentials 
+mqsisetdbparms <Integration node/ Broker Name> -n sftp::<sft_id> -u <user> -p <password>
+####################################################
+
+
+
+################# OS Level  ######################
+
+# CPU/Memory
+nmon
+topas
+#current LPAR related parameters and Hypervisor information
+lparstat
+#Displays the system model, machine serial, processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem information, paging space information, and devices information
+prtconf
+
+df -k
+df -g
+lsconf
+lsvg
+netstat -an|grep <Port>
+# JVM heap size adjustment
+mqsichangeproperties <Integration node/ Broker Name> -b agent -o ComIbmJVMManager -n jvmMaxHeapSize -v <size e.g 1*********>
+mqsichangeproperties <Integration node/ Broker Name> -e <EXEC / IS Name> -o ComIbmJVMManager -n jvmMaxHeapSize -v <size e.g 1*********>
+# Create security profile 
+mqsicreateconfigurableservice <Integration node/ Broker Name> -c SecurityProfiles -o <SecurityProfileObjectName> -n authentication,authenticationConfig,mapping,authorization,propagation -v "LDAP",\"ldap://<Server Name>:389/rdn?cn\","NONE","NONE",TRUE
+####################################################
+
+################### SSL ############################
+1. Create KDB
+gsk7cmd -keydb -create -db <Kdb Name> -type jks -pw <password> -expire 0
+upload root cert at <Kdb Name>
+gsk7cmd -cert -add -db ../*.jks -pw <password> -type jks -file Corp-Root-CA-****.cer -label <label name> -format binary -trust enable
+2. //Create Request for Signed Cert
+//copy and <****>.arm at below link for validating entries
+https://www.sslchecker.com/csr/decode
+
+//Use below link to request signed cert
+https://certificates.*********/ssl/
+3. Import Signed cert and root CA at kdb
+runmqckm -cert -add *************
+4. Extract arm or public file, also import related party public key at kdb
+exchange public keys between
+
+
+####################################################
+################  SAP Connection  ##################
+
+mqsichangeproperties <Integration node/ Broker Name> -c EISProviders -o SAP -n nativeLibs -v /Dir/jars
+mqsichangeproperties <Integration node/ Broker Name> -c EISProviders -o SAP -n jarsURL -v /Dir/jars
+mqsireload <Integration node/ Broker Name>
+mqsireportproperties <Integration node/ Broker Name> -c EISProviders -o SAP -r
+mqsisetdbparms <Integration node/ Broker Name> -n eis::SapCustomerOutbound.outadapte -u WBIUSER -p <password>
+mqsireload <Integration node/ Broker Name>
+
+<Server name>
+Port: ****, 33**
+Gateway service: sap****
+Client: *1*
+Code page: 11**
+System Number: 1*
+User Name: WBIU***
+Password: <*******>
+####################################################
