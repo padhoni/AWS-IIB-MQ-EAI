@@ -1,0 +1,170 @@
+########### Useful MQ Commands  #################
+# List Instances
+dspmq
+# Start MQ instances
+strmqm <QMGR>
+#Multi-instance
+strmqm -x <QMGR>
+#Stop MQ instances
+endmqm <QMGR>
+endmqm -x <QMGR>
+####################################################
+
+############## User and Service trace  #############
+strmqtrc -m <QMGR> -t detail -t all
+endmqtrc -a / endmqtrc -m <QMGR>
+dspmqtrc *.TRC
+runmqras -qmlist <QMGR> -section defs,trace,cluster -pmrno XXXXXX
+####################################################
+
+################# MQSC commands ####################
+# Display
+# * means all, we can write individual info
+dis chl(*)
+dis chl('Channel Name')
+dis QMGR
+dis LISTENER(*)
+dis AUTHINFO (*)
+dis LSSTATUS(*)
+dis QUEUE (*)
+AUTHREC,AUTHSERV,CHANNEL,CHLAUTH,CHSTATUS,CLUSQMGR,COMMINFO,CONN,ENTAUTH,NAMELIST,PROCESS,PUBSUB,QALIAS,QCLUSTER,QLOCAL,QMODEL,
+QREMOTE,QSTATUS,SBSTATUS,SERVICE,SUB,TOPIC,TPSTATUS
+ALTER QLOCAL("")
+####################################################
+
+################# Queues/Pub/Sub/Channels ###########
+DEFINE QLOCAL('LOCAL QUEUE NAME') +
+   DEFPSIST(YES) +
+   DESCR('Input queue for ...') +
+   MAXDEPTH(1XXXXXX) +
+   MAXMSGL(4XXXXXX) +
+   MSGDLVSQ(FIFO) +
+   NPMCLASS(HIGH) +
+   CLUSTER('CLSTR NAME') +
+   CLWLUSEQ(ANY) +
+   REPLACE
+
+DEFINE QREMOTE ('Queue Name') +
+     DESCR('Desc ...') +
+     PUT(ENABLED) +
+     DEFPSIST(YES) +
+     XMITQ('XMIT QUEUE Name') +
+     RNAME('RName') +
+     RQMNAME('XXXX') +
+     CLUSTER('XXXX') +
+     REPLACE
+	 
+* Subscription
+DEFINE SUB('SUBS NAME') +
+   TOPICSTR('XXXXXXX') +
+   TOPICOBJ('YYYYYYY') +
+   DESTCLAS(PROVIDED) +
+   DEST('LOCAL QUEUE NAME') +
+   PSPROP(MSGPROP) +
+   PUBPRTY(ASPUB) +
+   REQONLY(NO) +
+   REPLACE
+   
+DEFINE CHANNEL ('XXXXXX') CHLTYPE(RCVR) +
+       TRPTYPE(TCP) +
+       DESCR('Description ...') +
+       MAXMSGL(4XXXXXXX) +
+       REPLACE
+
+DEFINE CHANNEL ('XXXXXXX') CHLTYPE(SDR) +
+       TRPTYPE(TCP) +
+       CONNAME('server(port), server(port)') +
+       DESCR('Description ...') +
+       MAXMSGL(4XXXXXXX) +
+       XMITQ('QMGR') +
+       REPLACE
+
+DEFINE QLOCAL ('QMGR') +
+       DESCR('Description ...') +
+       PUT(ENABLED) +
+       DEFPSIST(YES) +
+       MAXDEPTH(10000) +
+       MAXMSGL(4XXXXXXX) +
+       MSGDLVSQ(FIFO) +
+       USAGE(XMITQ) +
+       TRIGGER +
+       TRIGTYPE(FIRST) +
+       TRIGDPTH(1) +
+       TRIGMPRI(0) +
+       TRIGDATA('XXXXXX') +
+       PROCESS(' ') +
+       INITQ('SYSTEM.CHANNEL.INITQ') +
+       NPMCLASS(HIGH) +
+       REPLACE
+####################################################
+
+################### SSL ############################
+//Create Kdb
+gsk7capicmd_64 -keydb -create -db KDBName.kdb -pw wm***** -type cms -expire 99999 -stash
+
+//Create Request for Signed Cert
+gsk7capicmd -certreq -create -db KDBName.kdb -label labelName -dn "CN=CN Name,OU=1***,O=OrgName,L=location,ST=StateName,C=Country" -size 2048 -file pubfileName.arm -pw wmq*****
+
+//copy and paste pubfileName.arm at below link for validating entries
+https://www.sslchecker.com/csr/decode
+
+//Use below link to request signed cert
+https://serverName/ssl/
+
+Cost center:                        XXXXXX
+Cost center contact name:           XXXXXX
+Cost center contact email:          XXXXXX
+Cost center plant:                  XXXXXX
+
+Technical contact name:             <your name>
+Technical contact email:            XXXXXX
+Technical contact department:       XXXXXX
+Technical contact telephone number: XXXXXX
+
+Project contact name:               <your name or Team member name>
+Project contact email:              <your email or Team member>
+Project contact department:         XXXXXX
+Project contact telephone number:   <Your phone number or Team member>
+
+import .arm file or paste content
+Host:
+XXXXXX
+location:
+XXXXXX:/XYZ/ABC#
+runmqckm -cert -add -label CorpRootCA -file Corp-Root-CA.cer -format ascii -db KDBName.kdb -trust enable
+runmqckm -cert -add -label CorpIssuingCA -file Corp-Issuing-CA01.cer -format ascii -db KDBName.kdb -trust enable
+
+runmqckm -cert -receive -db KDBName.kdb -pw wm***** -type cms -file CertName.cer -format ascii
+Validation successful.
+done
+
+Next:
+exchange public keys between MQCLNT and queue manager
+Added public key at kdb
+gsk7capicmd_64 -cert -add -file XXXXX.arm -db KDBName.kdb -pw wm****** -format ascii -label label
+
+Extract public key from kdb
+gsk7capicmd_64 -cert -extract -db KDBName.kdb -label labelName -pw wm****** -target KDBName.arm -format ascii
+
+Add arm file @ drive ******.jks
+Update SSLKEYR(/XYZ/ABC/QMGR)
+
+REFRESH SECURITY TYPE(SSL)
+
+In this case we renamed label using below commands:
+runmqckm -cert -rename -db UUFNBG11.kdb -label "labelName" -new_label "label"
+####################################################
+
+################# Auth/Others ######################
+Grant permissions to QManager and authorized queues
+
+setmqaut -m IIB10BRK -t qmgr -g <group name> +connect +inq
+setmqaut -m IIB10BRK -n SYSTEM.BROKER.DC.AUTH -t queue -g <group name> +inq +set
+#Cluster 
+alter qmgr REPOS('QMGR')
+
+set CHLAUTH("Channel") TYPE(ADDRESSMAP) ADDRESS(*) ACTION(REMOVE)
+set CHLAUTH("Channel") TYPE(BLOCKUSER) USERLIST('nobody') ACTION(REMOVE)
+
+bin]$ ./amqsget <Queue Name>
+####################################################
