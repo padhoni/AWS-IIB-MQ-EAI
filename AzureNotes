@@ -1,0 +1,33 @@
+Azure Notes:
+
+HDInsight (Interative Query Mapping):
+sudo su - hdfs
+hdfs dfs -mkdir /user/admin
+hdfs dfs -chown root:hdfs /user/admin (In case ownership changed)
+
+Deploy app first then configure NSG
+
+Inbound rule:
+65000 vnet to vnet
+65001 load balancer
+65000 deny all
+Priority based execution, if u add deny at first then no rule will be executed
+
+Updating or Installing Azure CLI
+
+Installing WMF 5.1 on Windows Server 2008 R2 and Windows 7
+Win7AndW2K8R2-KB3191566-x64.msu & Install-WMF5.1.ps1
+1.	Navigate to the folder into which you downloaded the ZIP file.
+2.	Right-click on the ZIP file, and select "Extract All...". The Zip contains 2 files: an MSU and the Install-WMF5.1.PS1 script file. 
+3.	After extracting the ZIP file contents, open PowerShell as administrator, then navigate to the folder containing the contents of the ZIP file.
+4.	Run the Install-Wmf5.1.ps1 script in that folder, and follow the instructions.
+Install from Windows Explorer (or File Explorer in Windows Server 2012 R2 or Windows 8.1)
+Installing from the Command Prompt
+1.	After downloading the correct package for your computer's architecture, open a Command Prompt window with elevated user rights (Run as Administrator). 
+
+On the Server Core installation options of Windows Server 2012 R2, Windows Server 2012, or Windows Server 2008 R2 SP1, Command Prompt opens with elevated user rights by default.
+2.	Change directories to the folder into which you have downloaded or copied the WMF 5.1 installation package.
+3.	Run one of the following commands: 
+o	On computers that are running Windows Server 2012 R2 or Windows 8.1 x64, run Win8.1AndW2K12R2-KB3191564-x64.msu /quiet.
+o	On computers that are running Windows Server 2012, run W2K12-KB3191565-x64.msu /quiet.
+o	On computers that are running Windows 8.1 x86, run Win8.1-KB3191564-x86.msu /quiet
