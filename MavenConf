@@ -1,0 +1,30 @@
+Maven Configuration:
+
+setx MAVEN_HOME "C:\Program Files\ApacheFoundation\apache-maven-3.3.9"
+setx M2_HOME "C:\Program Files\ApacheFoundation\apache-maven-3.3.9"
+setx path "C:\Program Files\ApacheFoundation\apache-maven-3.3.9\bin"
+
+-vm
+C:\Program Files\Java\jdk1.8.0_111\jre\bin\server\jvm.dll
+
+<settings>
+    <proxies>
+        <proxy>
+            <id>d-main-proxy</id>
+            <active>true</active>
+            <protocol>http</protocol>
+            <host>i.us.corpintra.net</host>
+            <port>80</port>
+            <nonProxyHosts>localhost|*.corpintra.net</nonProxyHosts>
+            <!-- <nonProxyHosts>localhost</nonProxyHosts> -->
+        </proxy>
+        <proxy>
+           <id>d-https-proxy</id>
+            <active>true</active>
+            <protocol>https</protocol>
+            <host>i.us.corpintra.net</host>
+            <port>80</port>
+            <nonProxyHosts>localhost|*.corpintra.net</nonProxyHosts>
+         </proxy>
+    </proxies>
+</settings>
