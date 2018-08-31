@@ -1,0 +1,7 @@
+set PATH="C:\Program Files\Java\jdk-10.0.2\bin";%PATH%
+set CLASSPATH="C:\Program Files\Java\jre-10.0.2\lib";%CLASSPATH%
+
+setx MAVEN_HOME "C:\Program Files\ApacheFoundation\apache-maven-3.3.9"
+setx M2_HOME "C:\Program Files\ApacheFoundation\apache-maven-3.3.9"
+setx path "C:\Program Files\ApacheFoundation\apache-maven-3.3.9\bin"
+set MAVEN_OPTS=-Xms256m
